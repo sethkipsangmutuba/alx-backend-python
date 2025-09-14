@@ -2,15 +2,21 @@
 import sqlite3
 import functools
 
-def log_queries(func):
+def log_queries():
     """Decorator that logs SQL queries"""
-    @functools.wraps(func)
-    def wrapper(query):
-        print(f"[LOG] Executing query: {query}")
-        return func(query)
-    return wrapper
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            query = kwargs.get("query")
+            if query is None and args:
+                query = args[0]
+            if query:
+                print(f"[LOG] Executing query: {query}")
+            return func(*args, **kwargs)
+        return wrapper
+    return decorator
 
-@log_queries
+@log_queries()
 def fetch_all_users(query):
     conn = sqlite3.connect("users.db")
     cursor = conn.cursor()
@@ -19,5 +25,5 @@ def fetch_all_users(query):
     conn.close()
     return results
 
-# Call the function exactly as shown in instructions
-fetch_all_users("SELECT * FROM users")
+# Execute function as instructed
+fetch_all_users(query="SELECT * FROM users")
