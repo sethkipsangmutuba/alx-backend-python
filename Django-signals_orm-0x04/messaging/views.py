@@ -1,7 +1,11 @@
-from django.shortcuts import get_object_or_404, render
-from .models import Message
+from django.shortcuts import redirect
+from django.contrib.auth.models import User
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 
-def message_history_view(request, message_id):
-    message = get_object_or_404(Message, id=message_id)
-    history = message.history.all().order_by('-edited_at')
-    return render(request, 'messaging/message_history.html', {'message': message, 'history': history})
+@login_required
+def delete_user(request):
+    user = request.user
+    user.delete()
+    messages.success(request, "Your account and all related data have been deleted.")
+    return redirect('home')  # replace 'home' with your homepage URL name
