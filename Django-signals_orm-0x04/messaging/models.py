@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.db.models import Prefetch
 
 class Message(models.Model):
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name="sent_messages")
@@ -8,9 +9,23 @@ class Message(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
     edited = models.BooleanField(default=False)
     edited_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name="edited_messages")
+    
+    parent_message = models.ForeignKey(
+        'self', null=True, blank=True, on_delete=models.CASCADE, related_name='replies'
+    )  # New field for threaded replies
 
     def __str__(self):
         return f"Message from {self.sender.username} to {self.receiver.username}"
+
+    def get_thread(self):
+        """
+        Returns the message with all replies efficiently using select_related and prefetch_related.
+        """
+        return Message.objects.filter(pk=self.pk) \
+            .select_related('sender', 'receiver') \
+            .prefetch_related(
+                Prefetch('replies', queryset=Message.objects.select_related('sender', 'receiver'))
+            )
 
 
 class MessageHistory(models.Model):
