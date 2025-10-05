@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Prefetch, Q
+from django.views.decorators.cache import cache_page  # import cache_page
 from .models import Message
 
 # Task 2: Delete user and related data
@@ -15,6 +16,7 @@ def delete_user(request):
 
 # Task 3: Threaded messages for logged-in user
 @login_required
+@cache_page(60)  # caches this view for 60 seconds
 def user_threaded_messages(request):
     """
     Retrieves all top-level messages for the logged-in user (sent or received) with replies,
