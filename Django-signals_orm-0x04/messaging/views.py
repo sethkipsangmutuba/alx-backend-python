@@ -40,3 +40,17 @@ def user_threaded_messages(request):
         all_threads.append(get_full_thread(msg))
 
     return render(request, 'messaging/threaded_messages.html', {'threads': all_threads})
+
+
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from .models import Message
+
+@login_required
+def unread_messages_view(request):
+    """
+    Displays only unread messages for the logged-in user.
+    """
+    unread_messages = Message.unread.unread_for_user(request.user)
+    return render(request, 'messaging/unread_messages.html', {'messages': unread_messages})
+
