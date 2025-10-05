@@ -2,7 +2,7 @@ from django.shortcuts import redirect, render
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Q
 from .models import Message
 
 # Task 2: Delete user and related data
@@ -17,14 +17,16 @@ def delete_user(request):
 @login_required
 def user_threaded_messages(request):
     """
-    Retrieves all top-level messages for the logged-in user with replies,
+    Retrieves all top-level messages for the logged-in user (sent or received) with replies,
     optimized using select_related and prefetch_related.
     """
-    top_messages = Message.objects.filter(receiver=request.user, parent_message__isnull=True) \
-        .select_related('sender', 'receiver') \
-        .prefetch_related(
-            Prefetch('replies', queryset=Message.objects.select_related('sender', 'receiver'))
-        ).order_by('-timestamp')
+    top_messages = Message.objects.filter(
+        Q(sender=request.user) | Q(receiver=request.user),
+        parent_message__isnull=True
+    ).select_related('sender', 'receiver') \
+     .prefetch_related(
+        Prefetch('replies', queryset=Message.objects.select_related('sender', 'receiver'))
+     ).order_by('-timestamp')
 
     # Recursive function to flatten threads
     def get_full_thread(msg):
