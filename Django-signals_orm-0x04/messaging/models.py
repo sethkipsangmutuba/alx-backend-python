@@ -54,3 +54,15 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"Notification for {self.user.username} about message {self.message.id}"
+
+
+
+from .managers import UnreadMessagesManager
+
+class Message(models.Model):
+    # ... existing fields ...
+    read = models.BooleanField(default=False)
+
+    objects = models.Manager()  # default manager
+    unread = UnreadMessagesManager()  # custom manager
+
